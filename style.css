@@ -1,0 +1,124 @@
+:root {
+    --neutral: lightgray;
+    --p2: lightskyblue;
+    --p1: hsl(from var(--p2) 0 s l);
+    --dot: white;
+    --background: slategray;
+    --border: darkgray;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    width: 100dvw;
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--background);
+    transition: background-color 0.5s;
+}
+
+.grid {
+    --cols: 0;
+    --rows: 0;
+    --max-grid-width: 75dvw;
+    --max-grid-height: 75dvh;
+    --gap: min(0.4em, 1vmin);
+    --cell-size: min(
+        4em,
+        calc(var(--max-grid-width) / var(--cols) - var(--gap)),
+        calc(var(--max-grid-height) / var(--rows) - var(--gap))
+    );
+
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    max-width: var(--max-grid-width);
+    max-height: var(--max-grid-height);
+    grid-template-columns: repeat(var(--cols), var(--cell-size));
+    grid-template-rows: repeat(var(--rows), var(--cell-size));
+    gap: var(--gap);
+    border: calc(var(--gap) * 2) solid var(--border);
+    background-color: var(--border);
+    border-radius: 10px;
+}
+
+.cell {
+    --dot-radius: calc(var(--cell-size) * 0.08);
+    background-color: var(--neutral);
+    border-radius: 5px;
+    width: 100%;
+    height: 100%;
+}
+
+.p1 {
+    background-color: var(--p1);
+}
+
+.p2 {
+    background-color: var(--p2);
+}
+
+.cell[data-dots='1'] {
+    background-image: radial-gradient(
+        circle var(--dot-radius) at 50% 50%,
+        var(--dot) 100%,
+        transparent 100%
+    );
+}
+.cell[data-dots='2'] {
+    background-image: radial-gradient(
+            circle var(--dot-radius) at 30% 50%,
+            var(--dot) 100%,
+            transparent 100%
+        ),
+        radial-gradient(
+            circle var(--dot-radius) at 70% 50%,
+            var(--dot) 100%,
+            transparent 100%
+        );
+}
+.cell[data-dots='3'] {
+    background-image: radial-gradient(
+            circle var(--dot-radius) at 50% 30%,
+            var(--dot) 100%,
+            transparent 100%
+        ),
+        radial-gradient(
+            circle var(--dot-radius) at 30% 70%,
+            var(--dot) 100%,
+            transparent 100%
+        ),
+        radial-gradient(
+            circle var(--dot-radius) at 70% 70%,
+            var(--dot) 100%,
+            transparent 100%
+        );
+}
+.cell[data-dots='4'] {
+    background-image: radial-gradient(
+            circle var(--dot-radius) at 30% 30%,
+            var(--dot) 100%,
+            transparent 100%
+        ),
+        radial-gradient(
+            circle var(--dot-radius) at 70% 30%,
+            var(--dot) 100%,
+            transparent 100%
+        ),
+        radial-gradient(
+            circle var(--dot-radius) at 30% 70%,
+            var(--dot) 100%,
+            transparent 100%
+        ),
+        radial-gradient(
+            circle var(--dot-radius) at 70% 70%,
+            var(--dot) 100%,
+            transparent 100%
+        );
+}
