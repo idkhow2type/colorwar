@@ -1,5 +1,18 @@
 import Game from './Game.js';
 
+function shuffle(array) {
+    let currentIndex = array.length;
+    let randomIndex;
+    while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex],
+            array[currentIndex],
+        ];
+    }
+    return array;
+}
 export default class Bot {
     /**
      * @param {Game} game - The game board.
@@ -17,12 +30,11 @@ export default class Bot {
         if (game.gameOver()) {
             return Infinity * (2 * !game.currentPlayer - 1);
         }
-        const cells = game.board.getCells((cell) => cell.value > 0);
-        return cells.reduce((acc, cell) => {
-            // convert boolean to -1 or 1
-            // (inserts dreading comment)
-            return acc + (2 * cell.owner - 1) * cell.value;
-        }, 0);
+        return game.board
+            .getCells((cell) => cell.value > 0)
+            .reduce((acc, cell) => {
+                return acc + (2 + cell.value**1.2) * (2 * cell.owner - 1);
+            }, 0);
     }
 
     /**
@@ -36,21 +48,37 @@ export default class Bot {
             return this.evaluate(game);
         }
 
-        return Math.max(
-            ...game.validMoves().map((cell) => {
-                const newGame = new Game({
-                    board: _.cloneDeep(game.board),
-                    player: game.currentPlayer,
-                    turn: game.turn,
-                });
-                newGame.update(cell.row, cell.column);
-                // convert boolean to -1 or 1 instead of branching for each player
-                return (
-                    this.minimax(depth - 1, newGame) *
-                    (2 * this.game.currentPlayer - 1)
-                );
-            })
-        );
+        let best = Infinity * -(2 * game.currentPlayer - 1);
+        if (game.currentPlayer) {
+            shuffle(
+                game.validMoves().map((cell) => {
+                    const newGame = new Game({
+                        board: _.cloneDeep(game.board),
+                        player: game.currentPlayer,
+                        turn: game.turn,
+                    });
+                    newGame.update(cell.row, cell.column);
+                    return this.minimax(depth - 1, newGame);
+                })
+            ).forEach((value) => {
+                best = Math.max(best, value);
+            });
+        } else {
+            shuffle(
+                game.validMoves().map((cell) => {
+                    const newGame = new Game({
+                        board: _.cloneDeep(game.board),
+                        player: game.currentPlayer,
+                        turn: game.turn,
+                    });
+                    newGame.update(cell.row, cell.column);
+                    return this.minimax(depth - 1, newGame);
+                })
+            ).forEach((value) => {
+                best = Math.min(best, value);
+            });
+        }
+        return best;
     }
 
     /**
@@ -59,7 +87,7 @@ export default class Bot {
      * @returns {Cell} - The best move.
      */
     bestMove(depth) {
-        return this.game.validMoves().reduce(
+        return shuffle(this.game.validMoves()).reduce(
             (best, cell) => {
                 const newGame = new Game({
                     board: _.cloneDeep(this.game.board),
@@ -67,13 +95,15 @@ export default class Bot {
                     turn: this.game.turn,
                 });
                 newGame.update(cell.row, cell.column);
-                const value = this.minimax(depth, newGame);
-                return value * (2 * this.game.currentPlayer - 1) >
-                    best.value * (2 * this.game.currentPlayer - 1)
+                const value = this.minimax(depth - 1, newGame);
+                return (this.game.currentPlayer ? Math.max : Math.min)(
+                    best.value,
+                    value
+                ) === value
                     ? { cell, value }
                     : best;
             },
             { cell: null, value: Infinity * -(2 * this.game.currentPlayer - 1) }
-        ).cell;
+        );
     }
 }

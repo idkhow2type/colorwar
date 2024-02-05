@@ -1,4 +1,4 @@
-import Cell from "./Cell.js";
+import Cell from './Cell.js';
 
 export default class Board {
     /**
@@ -54,12 +54,13 @@ export default class Board {
             for (const neighbor of neighbors) {
                 neighbor.update(neighbor.value + 1, owner);
                 if (neighbor.value >= 4) {
+                    neighbor.update(4, owner);
                     queue.push(neighbor);
                 }
             }
             if (
                 this.getCells((cell) => cell.value > 0).every(
-                    (cell) => cell.owner === this.currentPlayer
+                    (cell) => cell.owner === owner
                 )
             )
                 return;
