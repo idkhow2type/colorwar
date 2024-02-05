@@ -1,18 +1,6 @@
 import Game from './Game.js';
+import * as utils from './utils.js';
 
-function shuffle(array) {
-    let currentIndex = array.length;
-    let randomIndex;
-    while (currentIndex !== 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [array[currentIndex], array[randomIndex]] = [
-            array[randomIndex],
-            array[currentIndex],
-        ];
-    }
-    return array;
-}
 export default class Bot {
     /**
      * @param {Game} game - The game board.
@@ -33,7 +21,7 @@ export default class Bot {
         return game.board
             .getCells((cell) => cell.value > 0)
             .reduce((acc, cell) => {
-                return acc + (2 + cell.value**1.2) * (2 * cell.owner - 1);
+                return acc + (2 + cell.value ** 1.2) * (2 * cell.owner - 1);
             }, 0);
     }
 
@@ -41,42 +29,54 @@ export default class Bot {
      * Minimax algorithm.
      * @param {number} depth - The depth of the search.
      * @param {Game} game - The game board.
+     * @param {number} alpha - The alpha value.
+     * @param {number} beta - The beta value.
      * @returns {number} - The best move evaluation.
      */
-    minimax(depth, game = this.game) {
+    minimax(depth, game = this.game, alpha = -Infinity, beta = Infinity) {
         if (depth === 0 || game.gameOver()) {
             return this.evaluate(game);
         }
 
         let best = Infinity * -(2 * game.currentPlayer - 1);
         if (game.currentPlayer) {
-            shuffle(
-                game.validMoves().map((cell) => {
-                    const newGame = new Game({
-                        board: _.cloneDeep(game.board),
-                        player: game.currentPlayer,
-                        turn: game.turn,
-                    });
-                    newGame.update(cell.row, cell.column);
-                    return this.minimax(depth - 1, newGame);
-                })
-            ).forEach((value) => {
-                best = Math.max(best, value);
-            });
+            const moves = utils.shuffle(game.validMoves());
+            for (let i = 0; i < moves.length; i++) {
+                const cell = moves[i];
+                const newGame = new Game({
+                    board: _.cloneDeep(game.board),
+                    player: game.currentPlayer,
+                    turn: game.turn,
+                });
+                newGame.update(cell.row, cell.column);
+                best = Math.max(
+                    best,
+                    this.minimax(depth - 1, newGame, alpha, beta)
+                );
+                alpha = Math.max(alpha, best);
+                if (beta <= alpha) {
+                    break;
+                }
+            }
         } else {
-            shuffle(
-                game.validMoves().map((cell) => {
-                    const newGame = new Game({
-                        board: _.cloneDeep(game.board),
-                        player: game.currentPlayer,
-                        turn: game.turn,
-                    });
-                    newGame.update(cell.row, cell.column);
-                    return this.minimax(depth - 1, newGame);
-                })
-            ).forEach((value) => {
-                best = Math.min(best, value);
-            });
+            const moves = utils.shuffle(game.validMoves());
+            for (let i = 0; i < moves.length; i++) {
+                const cell = moves[i];
+                const newGame = new Game({
+                    board: _.cloneDeep(game.board),
+                    player: game.currentPlayer,
+                    turn: game.turn,
+                });
+                newGame.update(cell.row, cell.column);
+                best = Math.min(
+                    best,
+                    this.minimax(depth - 1, newGame, alpha, beta)
+                );
+                beta = Math.min(beta, best);
+                if (beta <= alpha) {
+                    break;
+                }
+            }
         }
         return best;
     }
@@ -86,9 +86,9 @@ export default class Bot {
      * @param {number} depth - The depth of the search.
      * @returns {Cell} - The best move.
      */
-    bestMove(depth) {
-        return shuffle(this.game.validMoves()).reduce(
-            (best, cell) => {
+    bestMoves(depth) {
+        return utils.shuffle(this.game.validMoves()).reduce(
+            (best, cell, i) => {
                 const newGame = new Game({
                     board: _.cloneDeep(this.game.board),
                     player: this.game.currentPlayer,
@@ -96,14 +96,24 @@ export default class Bot {
                 });
                 newGame.update(cell.row, cell.column);
                 const value = this.minimax(depth - 1, newGame);
-                return (this.game.currentPlayer ? Math.max : Math.min)(
-                    best.value,
-                    value
-                ) === value
-                    ? { cell, value }
-                    : best;
+                if (
+                    this.game.currentPlayer
+                        ? utils.nearCompare(value, best.at(-1).value, '>')
+                        : utils.nearCompare(value, best.at(-1).value, '<')
+                ) {
+                    return [{ cell, value }];
+                } else if (utils.nearCompare(value, best.at(-1).value, '==')) {
+                    return best.concat({ cell, value });
+                } else {
+                    return best;
+                }
             },
-            { cell: null, value: Infinity * -(2 * this.game.currentPlayer - 1) }
+            [
+                {
+                    cell: null,
+                    value: Infinity * -(2 * this.game.currentPlayer - 1),
+                },
+            ]
         );
     }
 }
