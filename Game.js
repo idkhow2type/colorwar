@@ -3,22 +3,23 @@ import { IOHandler } from './IOHandler.js';
 
 export default class Game {
     /**
-     * @param {number} rows - The number of rows in the board.
-     * @param {number} columns - The number of columns in the board.
-     * @param {string} player - The current player.
-     * @param {typeof IOHandler} io - The input/output handler constructor.
-     * @param {...any} ioArgs - The arguments to pass to the io constructor.
+     * @param {{
+     * rows: number,
+     * columns: number,
+     * board: Board,
+     * player: boolean,
+     * io: [IOHandler, ...any[]],
+     * }} options - The game options.
      */
-    constructor(rows, columns, player, io, ...ioArgs) {
-        this.board = new Board(rows, columns, this);
+    constructor(options) {
+        const { rows, columns, board, player, io } = options;
+        this.board = board ?? new Board(rows, columns);
         this.currentPlayer = player;
         this.turn = 0;
-        this.io = new io(
-            this.board.rows,
-            this.board.columns,
+        this.io = new io[0](
             this.board,
             this.update.bind(this),
-            ...ioArgs
+            ...io.slice(1)
         );
         this.io.render();
         this.io.startInput();
@@ -44,7 +45,7 @@ export default class Game {
             }
         }
 
-        this.currentPlayer = this.currentPlayer === 'p1' ? 'p2' : 'p1';
+        this.currentPlayer = !this.currentPlayer;
         this.turn++;
 
         this.io.render();
@@ -55,8 +56,11 @@ export default class Game {
      * @returns {boolean} - True if the game is over, false otherwise.
      */
     gameOver() {
-        return this.board
-            .getCells((cell) => cell.value > 0)
-            .every((cell) => cell.owner === this.currentPlayer);
+        return (
+            this.turn >= 2 &&
+            this.board
+                .getCells((cell) => cell.value > 0)
+                .every((cell) => cell.owner === this.currentPlayer)
+        );
     }
 }

@@ -1,7 +1,11 @@
+import Board from './Board.js';
+
 export class IOHandler {
-    constructor(rows, columns, board, update) {
-        this.rows = rows;
-        this.columns = columns;
+    /**
+     * @param {Board} board - The game board.
+     * @param {function} update - The update function.
+     */
+    constructor(board, update) {
         this.board = board;
         this.update = update;
     }
@@ -24,21 +28,19 @@ export class IOHandler {
 
 export class DOMIOHandler extends IOHandler {
     /**
-     * @param {number} rows - The number of rows in the board.
-     * @param {number} columns - The number of columns in the board.
      * @param {Board} board - The game board.
      * @param {function} update - The update function.
      * @param {HTMLElement} container - The container element to render the game board in.
      */
-    constructor(rows, columns, board, update, container) {
-        super(rows, columns, board, update);
+    constructor(board, update, container) {
+        super(board, update);
         this.container = container;
 
-        this.container.style.setProperty('--rows', this.rows);
-        this.container.style.setProperty('--cols', this.columns);
+        this.container.style.setProperty('--rows', this.board.rows);
+        this.container.style.setProperty('--cols', this.board.columns);
 
-        for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < this.columns; j++) {
+        for (let i = 0; i < this.board.rows; i++) {
+            for (let j = 0; j < this.board.columns; j++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 this.container.appendChild(cell);
@@ -47,29 +49,34 @@ export class DOMIOHandler extends IOHandler {
     }
 
     startInput() {
-        for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < this.columns; j++) {
-                const cell = this.container.children[i * this.columns + j];
+        for (let i = 0; i < this.board.rows; i++) {
+            for (let j = 0; j < this.board.columns; j++) {
+                const cell = this.container.children[i * this.board.columns + j];
                 cell.onclick = () => this.update(i, j);
             }
         }
     }
 
     stopInput() {
-        for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < this.columns; j++) {
-                const cell = this.container.children[i * this.columns + j];
+        for (let i = 0; i < this.board.rows; i++) {
+            for (let j = 0; j < this.board.columns; j++) {
+                const cell = this.container.children[i * this.board.columns + j];
                 cell.onclick = null;
             }
         }
     }
 
     render() {
-        for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < this.columns; j++) {
-                const cell = this.container.children[i * this.columns + j];
+        for (let i = 0; i < this.board.rows; i++) {
+            for (let j = 0; j < this.board.columns; j++) {
+                const cell =
+                    this.container.children[i * this.board.columns + j];
                 cell.classList.remove('p1', 'p2');
-                cell.classList.add(this.board.board[i][j].owner);
+                if (this.board.board[i][j].owner !== null) {
+                    cell.classList.add(
+                        this.board.board[i][j].owner ? 'p2' : 'p1'
+                    );
+                }
                 cell.dataset.dots = this.board.board[i][j].value;
             }
         }
