@@ -8,4 +8,4 @@ window.game = new Game({
     player: false,
     io: [DOMIOHandler, document.querySelector('.grid')],
 });
-window.bot = new Bot(window.game.board, true);
+window.bot = new Bot(window.game);

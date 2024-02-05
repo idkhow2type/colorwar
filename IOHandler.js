@@ -39,6 +39,7 @@ export class DOMIOHandler extends IOHandler {
         this.container.style.setProperty('--rows', this.board.rows);
         this.container.style.setProperty('--cols', this.board.columns);
 
+        this.container.innerHTML = '';
         for (let i = 0; i < this.board.rows; i++) {
             for (let j = 0; j < this.board.columns; j++) {
                 const cell = document.createElement('div');

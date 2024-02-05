@@ -8,21 +8,32 @@ export default class Game {
      * columns: number,
      * board: Board,
      * player: boolean,
+     * turn: number,
      * io: [IOHandler, ...any[]],
      * }} options - The game options.
      */
     constructor(options) {
-        const { rows, columns, board, player, io } = options;
+        const { rows, columns, board, player, turn, io } = options;
         this.board = board ?? new Board(rows, columns);
         this.currentPlayer = player;
-        this.turn = 0;
-        this.io = new io[0](
-            this.board,
-            this.update.bind(this),
-            ...io.slice(1)
+        this.turn = turn ?? 0;
+        this.io = io
+            ? new io[0](this.board, this.update.bind(this), ...io.slice(1))
+            : null;
+        this.io?.render();
+        this.io?.startInput();
+    }
+
+    /**
+     * Returns the valid moves for the current player.
+     * @returns {Cell[]} - The valid moves.
+     */
+    validMoves() {
+        return this.board.getCells((cell) =>
+            this.turn < 2
+                ? cell.owner === null
+                : cell.owner === this.currentPlayer
         );
-        this.io.render();
-        this.io.startInput();
     }
 
     /**
@@ -48,7 +59,7 @@ export default class Game {
         this.currentPlayer = !this.currentPlayer;
         this.turn++;
 
-        this.io.render();
+        this.io?.render();
     }
 
     /**
@@ -57,10 +68,10 @@ export default class Game {
      */
     gameOver() {
         return (
-            this.turn >= 2 &&
+            this.turn > 1 &&
             this.board
                 .getCells((cell) => cell.value > 0)
-                .every((cell) => cell.owner === this.currentPlayer)
+                .every((cell) => cell.owner === !this.currentPlayer)
         );
     }
 }
