@@ -21,7 +21,16 @@ export default class Bot {
         return game.board
             .getCells((cell) => cell.value > 0)
             .reduce((acc, cell) => {
-                return acc + (2 + cell.value ** 1.2) * (2 * cell.owner - 1);
+                return (
+                    acc +
+                    (2 +
+                        cell.value ** 1.2 +
+                        -(
+                            Math.abs(cell.row - game.board.rows / 2) +
+                            Math.abs(cell.column - game.board.columns / 2)
+                        )) *
+                        (2 * cell.owner - 1)
+                );
             }, 0);
     }
 
@@ -38,17 +47,28 @@ export default class Bot {
             return this.evaluate(game);
         }
 
-        let best = Infinity * -(2 * game.currentPlayer - 1);
-        if (game.currentPlayer) {
-            const moves = utils.shuffle(game.validMoves());
-            for (let i = 0; i < moves.length; i++) {
-                const cell = moves[i];
-                const newGame = new Game({
-                    board: _.cloneDeep(game.board),
-                    player: game.currentPlayer,
-                    turn: game.turn,
-                });
-                newGame.update(cell.row, cell.column);
+        const sign = game.currentPlayer ? 1 : -1;
+        let best = Infinity * -sign;
+        const moves = game.validMoves().map((cell) => {
+            const newGame = new Game({
+                board: _.cloneDeep(game.board),
+                player: game.currentPlayer,
+                turn: game.turn,
+            });
+            newGame.update(cell.row, cell.column);
+            return { cell, value: this.evaluate(newGame) };
+        });
+        moves.sort((a, b) => (b.value - a.value) * sign);
+        for (let i = 0; i < moves.length; i++) {
+            const cell = moves[i]['cell'];
+            const newGame = new Game({
+                board: _.cloneDeep(game.board),
+                player: game.currentPlayer,
+                turn: game.turn,
+            });
+            newGame.update(cell.row, cell.column);
+
+            if (game.currentPlayer) {
                 best = Math.max(
                     best,
                     this.minimax(depth - 1, newGame, alpha, beta)
@@ -57,17 +77,7 @@ export default class Bot {
                 if (beta <= alpha) {
                     break;
                 }
-            }
-        } else {
-            const moves = utils.shuffle(game.validMoves());
-            for (let i = 0; i < moves.length; i++) {
-                const cell = moves[i];
-                const newGame = new Game({
-                    board: _.cloneDeep(game.board),
-                    player: game.currentPlayer,
-                    turn: game.turn,
-                });
-                newGame.update(cell.row, cell.column);
+            } else {
                 best = Math.min(
                     best,
                     this.minimax(depth - 1, newGame, alpha, beta)
