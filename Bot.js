@@ -50,22 +50,14 @@ export default class Bot {
         const sign = game.currentPlayer ? 1 : -1;
         let best = Infinity * -sign;
         const moves = game.validMoves().map((cell) => {
-            const newGame = new Game({
-                board: _.cloneDeep(game.board),
-                player: game.currentPlayer,
-                turn: game.turn,
-            });
+            const newGame = game.clone();
             newGame.update(cell.row, cell.column);
             return { cell, value: this.evaluate(newGame) };
         });
         moves.sort((a, b) => (b.value - a.value) * sign);
         for (let i = 0; i < moves.length; i++) {
             const cell = moves[i]['cell'];
-            const newGame = new Game({
-                board: _.cloneDeep(game.board),
-                player: game.currentPlayer,
-                turn: game.turn,
-            });
+            const newGame = game.clone();
             newGame.update(cell.row, cell.column);
 
             if (game.currentPlayer) {
@@ -92,38 +84,27 @@ export default class Bot {
     }
 
     /**
-     * Returns the best move.
+     * Returns the best moves.
      * @param {number} depth - The depth of the search.
-     * @returns {Cell} - The best move.
+     * @returns {Cell[]} - The best move.
      */
     bestMoves(depth) {
-        return utils.shuffle(this.game.validMoves()).reduce(
-            (best, cell, i) => {
-                const newGame = new Game({
-                    board: _.cloneDeep(this.game.board),
-                    player: this.game.currentPlayer,
-                    turn: this.game.turn,
-                });
-                newGame.update(cell.row, cell.column);
-                const value = this.minimax(depth - 1, newGame);
-                if (
-                    this.game.currentPlayer
-                        ? utils.nearCompare(value, best.at(-1).value, '>')
-                        : utils.nearCompare(value, best.at(-1).value, '<')
-                ) {
-                    return [{ cell, value }];
-                } else if (utils.nearCompare(value, best.at(-1).value, '==')) {
-                    return best.concat({ cell, value });
-                } else {
-                    return best;
-                }
-            },
-            [
-                {
-                    cell: null,
-                    value: Infinity * -(2 * this.game.currentPlayer - 1),
-                },
-            ]
-        );
+        return this.game.validMoves().reduce((best, cell) => {
+            const newGame = this.game.clone();
+            newGame.update(cell.row, cell.column);
+            const value = this.minimax(depth - 1, newGame);
+            if (
+                best === null ||
+                (this.game.currentPlayer
+                    ? utils.nearCompare(value, best.at(-1).value, '>')
+                    : utils.nearCompare(value, best.at(-1).value, '<'))
+            ) {
+                return [{ cell, value }];
+            } else if (utils.nearCompare(value, best.at(-1).value, '==')) {
+                return best.concat({ cell, value });
+            } else {
+                return best;
+            }
+        }, null);
     }
 }

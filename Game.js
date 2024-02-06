@@ -25,6 +25,20 @@ export default class Game {
     }
 
     /**
+     * Clones the game state.
+     * @param {[IOHandler, ...any[]]} io - (Optional) The IO handler and its arguments.
+     * @returns {Game} - The cloned game.
+     */
+    clone(io = null) {
+        return new Game({
+            board: _.cloneDeep(this.board),
+            player: this.currentPlayer,
+            turn: this.turn,
+            io,
+        });
+    }
+
+    /**
      * Returns the valid moves for the current player.
      * @returns {Cell[]} - The valid moves.
      */
