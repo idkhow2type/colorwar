@@ -17,9 +17,7 @@ export default class Game {
         this.board = board ?? new Board(rows, columns);
         this.currentPlayer = player;
         this.turn = turn ?? 0;
-        this.io = io
-            ? new io[0](this.board, this.update.bind(this), ...io.slice(1))
-            : null;
+        this.io = io ? new io[0](this, ...io.slice(1)) : null;
         this.io?.render();
         this.io?.startInput();
     }

@@ -21,16 +21,15 @@ export default class Bot {
         return game.board
             .getCells((cell) => cell.value > 0)
             .reduce((acc, cell) => {
-                return (
-                    acc +
-                    (2 +
-                        cell.value ** 1.2 +
-                        -(
-                            Math.abs(cell.row - game.board.rows / 2) +
-                            Math.abs(cell.column - game.board.columns / 2)
-                        )) *
-                        (2 * cell.owner - 1)
-                );
+                const sign = cell.owner ? 1 : -1;
+
+                const baseCellValue = 2;
+                const dotValue = cell.value ** 1.2;
+
+                const rowDist = Math.abs(cell.row - game.board.rows / 2);
+                const colDist = Math.abs(cell.column - game.board.columns / 2);
+                const distToCenter = -1 * (rowDist + colDist);
+                return acc + (baseCellValue + dotValue + distToCenter) * sign;
             }, 0);
     }
 

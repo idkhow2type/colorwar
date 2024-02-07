@@ -1,13 +1,11 @@
-import Board from './Board.js';
+import Game from './Game.js';
 
 export class IOHandler {
     /**
-     * @param {Board} board - The game board.
-     * @param {function} update - The update function.
+     * @param {Game} game - The game board.
      */
-    constructor(board, update) {
-        this.board = board;
-        this.update = update;
+    constructor(game) {
+        this.game = game;
     }
 
     /**
@@ -28,58 +26,78 @@ export class IOHandler {
 
 export class DOMIOHandler extends IOHandler {
     /**
-     * @param {Board} board - The game board.
-     * @param {function} update - The update function.
-     * @param {HTMLElement} container - The container element to render the game board in.
+     * @param {Game} game - The game board.
+     * @param {HTMLElement} boardContainer - The container element to render the game board in.
+     * @param {HTMLElement} turnContainer - The container element to render the current player in.
      */
-    constructor(board, update, container) {
-        super(board, update);
-        this.container = container;
+    constructor(game, boardContainer, turnContainer=null) {
+        super(game);
+        this.boardContainer = boardContainer;
+        this.turnContainer = turnContainer;
 
-        this.container.style.setProperty('--rows', this.board.rows);
-        this.container.style.setProperty('--cols', this.board.columns);
+        this.boardContainer.style.setProperty('--rows', this.game.board.rows);
+        this.boardContainer.style.setProperty(
+            '--cols',
+            this.game.board.columns
+        );
 
-        this.container.innerHTML = '';
-        for (let i = 0; i < this.board.rows; i++) {
-            for (let j = 0; j < this.board.columns; j++) {
+        this.boardContainer.innerHTML = '';
+        for (let i = 0; i < this.game.board.rows; i++) {
+            for (let j = 0; j < this.game.board.columns; j++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                this.container.appendChild(cell);
+                this.boardContainer.appendChild(cell);
             }
         }
     }
 
     startInput() {
-        for (let i = 0; i < this.board.rows; i++) {
-            for (let j = 0; j < this.board.columns; j++) {
-                const cell = this.container.children[i * this.board.columns + j];
-                cell.onclick = () => this.update(i, j);
+        for (let i = 0; i < this.game.board.rows; i++) {
+            for (let j = 0; j < this.game.board.columns; j++) {
+                const cell =
+                    this.boardContainer.children[
+                        i * this.game.board.columns + j
+                    ];
+                cell.onclick = () => this.game.update(i, j);
             }
         }
     }
 
     stopInput() {
-        for (let i = 0; i < this.board.rows; i++) {
-            for (let j = 0; j < this.board.columns; j++) {
-                const cell = this.container.children[i * this.board.columns + j];
+        for (let i = 0; i < this.game.board.rows; i++) {
+            for (let j = 0; j < this.game.board.columns; j++) {
+                const cell =
+                    this.boardContainer.children[
+                        i * this.game.board.columns + j
+                    ];
                 cell.onclick = null;
             }
         }
     }
 
     render() {
-        for (let i = 0; i < this.board.rows; i++) {
-            for (let j = 0; j < this.board.columns; j++) {
+        this.turnContainer?.classList.remove('p1', 'p2');
+        this.turnContainer?.classList.add(
+            this.game.currentPlayer ? 'p2' : 'p1'
+        );
+        for (let i = 0; i < this.game.board.rows; i++) {
+            for (let j = 0; j < this.game.board.columns; j++) {
                 const cell =
-                    this.container.children[i * this.board.columns + j];
+                    this.boardContainer.children[
+                        i * this.game.board.columns + j
+                    ];
                 cell.classList.remove('p1', 'p2');
-                if (this.board.board[i][j].owner !== null) {
+                if (this.game.board.board[i][j].owner !== null) {
                     cell.classList.add(
-                        this.board.board[i][j].owner ? 'p2' : 'p1'
+                        this.game.board.board[i][j].owner ? 'p2' : 'p1'
                     );
                 }
-                cell.dataset.dots = this.board.board[i][j].value;
+                cell.dataset.dots = this.game.board.board[i][j].value;
             }
+        }
+        if (this.game.gameOver()) {
+            this.stopInput();
+            alert(`Player ${!this.game.currentPlayer ? 2 : 1} wins!`)
         }
     }
 }

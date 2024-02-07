@@ -3,7 +3,7 @@ import { DOMIOHandler } from './IOHandler.js';
 import Bot from './Bot.js';
 
 const game = new Game({
-    rows: 7,
+    rows: 3,
     columns: 7,
     player: Math.random() < 0.5,
     io: [DOMIOHandler, document.querySelector('.grid')],
