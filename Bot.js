@@ -8,6 +8,7 @@ export default class Bot {
      */
     constructor(game) {
         this.game = game;
+        this.cacheRate = { hits: 0, misses: 0 };
     }
 
     /**
@@ -42,10 +43,23 @@ export default class Bot {
      * @param {number} beta - The beta value.
      * @returns {Cell[]} - The best move and its score.
      */
-    minimax(depth, game = this.game, alpha = -Infinity, beta = Infinity) {
+    minimax(
+        depth,
+        game = this.game,
+        alpha = -Infinity,
+        beta = Infinity,
+        transpositionTable = new Map(),
+    ) {
         if (depth === 0 || game.gameOver()) {
             return [{ score: this.evaluate(game), move: null }];
         }
+
+        const cached = transpositionTable.get(game.hash());
+        if (cached && cached.depth >= depth) {
+            this.cacheRate.hits++;
+            return cached.best;
+        }
+        this.cacheRate.misses++;
 
         const sign = game.currentPlayer ? 1 : -1;
 
@@ -63,8 +77,13 @@ export default class Bot {
             const newGame = game.clone();
             newGame.update(cell.row, cell.column);
 
-            const newScore = this.minimax(depth - 1, newGame, alpha, beta)[0]
-                .score;
+            const newScore = this.minimax(
+                depth - 1,
+                newGame,
+                alpha,
+                beta,
+                transpositionTable
+            )[0].score;
 
             if (game.currentPlayer) {
                 if (utils.nearCompare(newScore, score, '>')) {
@@ -90,6 +109,8 @@ export default class Bot {
                 }
             }
         }
+
+        transpositionTable.set(game.hash(), { depth, best });
         return best;
     }
 }

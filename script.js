@@ -18,11 +18,11 @@ window.play = () => {
             return;
         }
         console.time('minimax');
-        const best = await bot.minimax(6);
+        const best = bot.minimax(6);
         console.timeEnd('minimax');
         const { move, score } = best[Math.floor(Math.random() * best.length)];
         game.update(move.row, move.column);
-        console.log(best, score);
+        console.log(best, score, bot.cacheRate.hits/ (bot.cacheRate.hits + bot.cacheRate.misses) * 100 + '%');
     }, 500);
 };
 window.play();

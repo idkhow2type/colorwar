@@ -10,10 +10,9 @@ export default class Game {
      * player: boolean,
      * turn: number,
      * io: [IOHandler, ...any[]],
-     * }} options - The game options.
+     * }} - The game options.
      */
-    constructor(options) {
-        const { rows, columns, board, player, turn, io } = options;
+    constructor({ rows, columns, board, player, turn, io }) {
         this.board = board ?? new Board(rows, columns);
         this.currentPlayer = player;
         this.turn = turn ?? 0;
@@ -85,5 +84,18 @@ export default class Game {
                 .getCells((cell) => cell.value > 0)
                 .every((cell) => cell.owner === !this.currentPlayer)
         );
+    }
+
+    hash() {
+        const clone = this.clone();
+
+        return JSON.stringify({
+            b: clone.board.board.flat().map((cell) => ({
+                v: cell.value,
+                o: cell.owner,
+            })),
+            p: clone.currentPlayer,
+            t: clone.turn,
+        });
     }
 }
