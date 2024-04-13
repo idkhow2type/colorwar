@@ -3,29 +3,29 @@ import { DOMIOHandler } from './IOHandler.js';
 import Bot from './Bot.js';
 
 const game = new Game({
-    rows: 5,
-    columns: 5,
+    rows: 6,
+    columns: 6,
     player: false,
     io: [DOMIOHandler, document.querySelector('.grid')],
 });
-const bot = new Bot(game);
+const botTune = new Bot(game, [3, 1.6, -1]);
 
 console.log(game.currentPlayer);
 window.play = () => {
-    const interval = setInterval(async () => {
+    const interval = setInterval(() => {
         if (game.gameOver()) {
             clearInterval(interval);
             return;
         }
-        console.time('minimax');
-        const best = bot.minimax(6);
-        console.timeEnd('minimax');
-        const { move, score } = best[Math.floor(Math.random() * best.length)];
-        game.update(move.row, move.column);
-        console.log(best, score, bot.cacheRate.hits/ (bot.cacheRate.hits + bot.cacheRate.misses) * 100 + '%');
+        console.time('tune');
+        const tuneBest = botTune.minimax(6);
+        console.timeEnd('tune');
+        const { move: tuneMove, score: tuneScore } =
+            tuneBest[Math.floor(Math.random() * tuneBest.length)];
+        game.update(tuneMove.row, tuneMove.column);
     }, 500);
 };
-window.play();
+window.play()
 
 window.game = game;
-window.bot = bot;
+window.bot = botTune;

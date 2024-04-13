@@ -6,9 +6,9 @@ export default class Bot {
     /**
      * @param {Game} game - The game board.
      */
-    constructor(game) {
+    constructor(game, scalers = [2, 1.2, -1]) {
         this.game = game;
-        this.cacheRate = { hits: 0, misses: 0 };
+        this.scalers = scalers;
     }
 
     /**
@@ -25,12 +25,12 @@ export default class Bot {
             .reduce((acc, cell) => {
                 const sign = cell.owner ? 1 : -1;
 
-                const baseCellValue = 2;
-                const dotValue = cell.value ** 1.2;
+                const baseCellValue = this.scalers[0];
+                const dotValue = cell.value ** this.scalers[1];
 
                 const rowDist = Math.abs(cell.row - game.board.rows / 2);
                 const colDist = Math.abs(cell.column - game.board.columns / 2);
-                const distToCenter = -1 * (rowDist + colDist);
+                const distToCenter = this.scalers[2] * (rowDist + colDist);
                 return acc + (baseCellValue + dotValue + distToCenter) * sign;
             }, 0);
     }
@@ -48,7 +48,7 @@ export default class Bot {
         game = this.game,
         alpha = -Infinity,
         beta = Infinity,
-        transpositionTable = new Map(),
+        transpositionTable = new Map()
     ) {
         if (depth === 0 || game.gameOver()) {
             return [{ score: this.evaluate(game), move: null }];
@@ -56,10 +56,8 @@ export default class Bot {
 
         const cached = transpositionTable.get(game.hash());
         if (cached && cached.depth >= depth) {
-            this.cacheRate.hits++;
             return cached.best;
         }
-        this.cacheRate.misses++;
 
         const sign = game.currentPlayer ? 1 : -1;
 
