@@ -1,6 +1,8 @@
-import Cell from './Cell.js';
 import Game from './Game.js';
 import * as utils from './utils.js';
+/**
+ * @type {import('./Cell.js').Cell}
+ */
 
 export default class Bot {
     /**

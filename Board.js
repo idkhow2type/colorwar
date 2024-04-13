@@ -1,4 +1,6 @@
-import Cell from './Cell.js';
+/**
+ * @type {import('./Cell').default}
+ */
 
 export default class Board {
     /**
@@ -6,6 +8,9 @@ export default class Board {
      * @param {number} columns - The number of columns in the board.
      */
     constructor(rows, columns) {
+        /**
+         * @type {Array<Array<Cell>>}
+         */
         this.board = [];
         this.rows = rows;
         this.columns = columns;
@@ -19,9 +24,20 @@ export default class Board {
         for (let i = 0; i < this.rows; i++) {
             this.board[i] = [];
             for (let j = 0; j < this.columns; j++) {
-                this.board[i][j] = new Cell(i, j);
+                this.board[i][j] = { row: i, column: j, value: 0, owner: null };
             }
         }
+    }
+
+    /**
+     * Clones the board.
+     */
+    clone() {
+        const board = new Board(this.rows, this.columns);
+        board.board = this.board.map((row) =>
+            row.map((cell) => ({ ...cell }))
+        );
+        return board;
     }
 
     /**
@@ -43,7 +59,8 @@ export default class Board {
         const queue = [cell];
         while (queue.length > 0) {
             const current = queue.shift();
-            current.update(0, null);
+            current.value = 0;
+            current.owner = null;
             // define the neighbors from cardinal directions
             const neighbors = [
                 this.board[current.row - 1]?.[current.column],
@@ -52,9 +69,11 @@ export default class Board {
                 this.board[current.row]?.[current.column + 1],
             ].filter((cell) => cell !== undefined);
             for (const neighbor of neighbors) {
-                neighbor.update(neighbor.value + 1, owner);
+                neighbor.value++;
+                neighbor.owner = owner;
                 if (neighbor.value >= 4) {
-                    neighbor.update(4, owner);
+                    neighbor.value = 4
+                    neighbor.owner = owner
                     queue.push(neighbor);
                 }
             }

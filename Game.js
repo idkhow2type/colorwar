@@ -28,7 +28,7 @@ export default class Game {
      */
     clone(io = null) {
         return new Game({
-            board: _.cloneDeep(this.board),
+            board: this.board.clone(),
             player: this.currentPlayer,
             turn: this.turn,
             io,
@@ -56,11 +56,12 @@ export default class Game {
         const cell = this.board.board[i][j];
         if (this.turn < 2) {
             if (cell.value !== 0) return;
-            cell.update(3, this.currentPlayer);
+            cell.value = 3;
+            cell.owner = this.currentPlayer;
         } else {
             if (cell.value === 0) return;
             if (cell.owner !== this.currentPlayer) return;
-            cell.update(cell.value + 1, cell.owner);
+            cell.value++;
 
             if (cell.value >= 4) {
                 this.board.spread(cell);
