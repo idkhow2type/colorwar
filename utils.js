@@ -32,3 +32,10 @@ export function nearCompare(a, b, operator, epsilon = 1e-6) {
         ? (Math.abs(a - b) || 0) < epsilon
         : false;
 }
+
+/**
+ * Returns a promise that resolves after a certain amount of time.
+ */
+export function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}

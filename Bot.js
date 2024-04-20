@@ -8,7 +8,7 @@ export default class Bot {
     /**
      * @param {Game} game - The game board.
      */
-    constructor(game, scalers = [2, 1.2, -1]) {
+    constructor(game, scalers = [3, 1.6, 1]) {
         this.game = game;
         this.scalers = scalers;
     }
@@ -32,7 +32,7 @@ export default class Bot {
 
                 const rowDist = Math.abs(cell.row - game.board.rows / 2);
                 const colDist = Math.abs(cell.column - game.board.columns / 2);
-                const distToCenter = this.scalers[2] * (rowDist + colDist);
+                const distToCenter = -this.scalers[2] * (rowDist + colDist);
                 return acc + (baseCellValue + dotValue + distToCenter) * sign;
             }, 0);
     }

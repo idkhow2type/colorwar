@@ -1,31 +1,73 @@
 import Game from './Game.js';
 import { DOMIOHandler } from './IOHandler.js';
 import Bot from './Bot.js';
+import { sleep } from './utils.js';
 
-const game = new Game({
+const settings = {
     rows: 6,
     columns: 6,
-    player: false,
-    io: [DOMIOHandler, document.querySelector('.grid')],
-});
-const botTune = new Bot(game, [3, 1.6, -1]);
-
-console.log(game.currentPlayer);
-window.play = () => {
-    const interval = setInterval(() => {
-        if (game.gameOver()) {
-            clearInterval(interval);
-            return;
-        }
-        console.time('tune');
-        const tuneBest = botTune.minimax(6);
-        console.timeEnd('tune');
-        const { move: tuneMove, score: tuneScore } =
-            tuneBest[Math.floor(Math.random() * tuneBest.length)];
-        game.update(tuneMove.row, tuneMove.column);
-    }, 500);
+    p1: {
+        type: 'bot',
+        depth: 6,
+        evalScalers: [3, 1.6, 1],
+    },
+    p2: {
+        type: 'bot',
+        depth: 6,
+        evalScalers: [3, 1.6, 1],
+    },
 };
-window.play()
 
-window.game = game;
-window.bot = botTune;
+// document.querySelectorAll('.game-settings input').forEach((input) => {
+//     input.addEventListener('change', (event) => {
+//         const { name, value } = event.target;
+//         console.log(name, value);
+//     });
+// });
+
+// console.log(settings);
+
+const game = new Game({
+    rows: settings.rows,
+    columns: settings.columns,
+    player: false,
+});
+const io = new DOMIOHandler(
+    game,
+    document.querySelector('.grid'),
+    document.body
+);
+io.render();
+
+const bot1 = new Bot(game, settings.p1.evalScalers);
+const bot2 = new Bot(game, settings.p2.evalScalers);
+
+async function play() {
+    if (settings.p1.type === 'human') {
+        await io.playTurn();
+    } else {
+        const best = bot1.minimax(settings.p1.depth);
+        const { move } = best[Math.floor(Math.random() * best.length)];
+        game.update(move.row, move.column);
+        await sleep(500)
+    }
+
+    io.render();
+    if (game.gameOver()) return;
+
+    if (settings.p2.type === 'human') {
+        await io.playTurn();
+    } else {
+        const best = bot2.minimax(settings.p2.depth);
+        const { move } = best[Math.floor(Math.random() * best.length)];
+        game.update(move.row, move.column);
+        await sleep(500)
+    }
+
+    io.render();
+    if (game.gameOver()) return;
+
+    requestAnimationFrame(play);
+}
+
+play();

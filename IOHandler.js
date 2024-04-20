@@ -9,14 +9,9 @@ export class IOHandler {
     }
 
     /**
-     * Starts the input loop/event listeners.
+     * Returns a promise that resolves when the player has made their turn.
      */
-    startInput() {}
-
-    /**
-     * Stops the input loop/event listeners.
-     */
-    stopInput() {}
+    async playTurn() {}
 
     /**
      * Renders the game board.
@@ -51,35 +46,24 @@ export class DOMIOHandler extends IOHandler {
         }
     }
 
-    /**
-     * 
-     * @param {Function} callback - The callback function to execute after the input.
-     */
-    startInput(callback) {
-        for (let i = 0; i < this.game.board.rows; i++) {
-            for (let j = 0; j < this.game.board.columns; j++) {
-                const cell =
-                    this.boardContainer.children[
-                        i * this.game.board.columns + j
-                    ];
-                cell.onclick = () => {
-                    this.game.update(i, j);
-                    callback?.();
-                };
-            }
-        }
-    }
-
-    stopInput() {
-        for (let i = 0; i < this.game.board.rows; i++) {
-            for (let j = 0; j < this.game.board.columns; j++) {
-                const cell =
-                    this.boardContainer.children[
-                        i * this.game.board.columns + j
-                    ];
-                cell.onclick = null;
-            }
-        }
+    async playTurn() {
+        return new Promise((resolve) => {
+            this.boardContainer.onclick = (event) => {
+                const cell = event.target;
+                if (cell.classList.contains('cell')) {
+                    const row = Math.floor(
+                        Array.from(cell.parentNode.children).indexOf(cell) /
+                            this.game.board.columns
+                    );
+                    const column =
+                        Array.from(cell.parentNode.children).indexOf(cell) %
+                        this.game.board.columns;
+                    if (!this.game.update(row, column)) return;
+                    this.boardContainer.onclick = null;
+                    resolve();
+                }
+            };
+        });
     }
 
     render() {
@@ -103,7 +87,6 @@ export class DOMIOHandler extends IOHandler {
             }
         }
         if (this.game.gameOver()) {
-            this.stopInput();
             alert(`Player ${this.game.currentPlayer ? 1 : 2} wins!`);
         }
     }
