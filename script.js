@@ -1,20 +1,22 @@
 import Game from './Game.js';
 import { DOMIOHandler } from './IOHandler.js';
-import Bot from './Bot.js';
+import { BotWorker } from './Bot.js';
 import { sleep } from './utils.js';
 
 const settings = {
-    rows: 6,
-    columns: 6,
+    rows: 10,
+    columns: 10,
     p1: {
         type: 'bot',
-        depth: 6,
-        evalScalers: [3, 1.6, 1],
+        depth: 2,
+        scalers: [3, 1.6, 1],
+        minDelay: 500,
     },
     p2: {
         type: 'bot',
-        depth: 6,
-        evalScalers: [3, 1.6, 1],
+        depth: 2,
+        scalers: [3, 1.6, 1],
+        minDelay: 500,
     },
 };
 
@@ -32,24 +34,41 @@ const game = new Game({
     columns: settings.columns,
     player: false,
 });
+
 const io = new DOMIOHandler(
     game,
     document.querySelector('.grid'),
     document.body
 );
+
+const bot1Worker = new BotWorker(
+    'bot1',
+    game,
+    settings.p1.scalers,
+    settings.p1.depth
+);
+const bot2Worker = new BotWorker(
+    'bot2',
+    game,
+    settings.p2.scalers,
+    settings.p2.depth
+);
+
+window.game = game;
+window.io = io;
+
 io.render();
-
-const bot1 = new Bot(game, settings.p1.evalScalers);
-const bot2 = new Bot(game, settings.p2.evalScalers);
-
 async function play() {
     if (settings.p1.type === 'human') {
         await io.playTurn();
     } else {
-        const best = bot1.minimax(settings.p1.depth);
+        const start = performance.now();
+        const best = await bot1Worker.getBest();
         const { move } = best[Math.floor(Math.random() * best.length)];
         game.update(move.row, move.column);
-        await sleep(500)
+        const end = performance.now();
+        if (end - start < settings.p1.minDelay)
+            await sleep(settings.p1.minDelay - end + start);
     }
 
     io.render();
@@ -58,10 +77,13 @@ async function play() {
     if (settings.p2.type === 'human') {
         await io.playTurn();
     } else {
-        const best = bot2.minimax(settings.p2.depth);
+        const start = performance.now();
+        const best = await bot2Worker.getBest();
         const { move } = best[Math.floor(Math.random() * best.length)];
         game.update(move.row, move.column);
-        await sleep(500)
+        const end = performance.now();
+        if (end - start < settings.p2.minDelay)
+            await sleep(settings.p2.minDelay - end + start);
     }
 
     io.render();

@@ -17,14 +17,14 @@ export default class Game {
     }
 
     /**
-     * Clones the game state.
-     * @returns {Game} - The cloned game.
+     * @param {Game} game - Game "struct" (without the class methods)
+     * @returns {Game}
      */
-    clone() {
+    static cloneFrom(game) {
         return new Game({
-            board: this.board.clone(),
-            player: this.currentPlayer,
-            turn: this.turn,
+            board: Board.cloneFrom(game.board),
+            player: game.currentPlayer,
+            turn: game.turn,
         });
     }
 
@@ -81,15 +81,13 @@ export default class Game {
     }
 
     hash() {
-        const clone = this.clone();
-
         return JSON.stringify({
-            b: clone.board.board.flat().map((cell) => ({
+            b: this.board.board.flat().map((cell) => ({
                 v: cell.value,
                 o: cell.owner,
             })),
-            p: clone.currentPlayer,
-            t: clone.turn,
+            p: this.currentPlayer,
+            t: this.turn,
         });
     }
 }

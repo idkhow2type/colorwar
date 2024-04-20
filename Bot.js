@@ -7,10 +7,13 @@ import * as utils from './utils.js';
 export default class Bot {
     /**
      * @param {Game} game - The game board.
+     * @param {number[]} scalers - The evaluation scalers.
+     * @param {number} depth - The depth of the search.
      */
-    constructor(game, scalers = [3, 1.6, 1]) {
+    constructor(game, scalers = [3, 1.6, 1], depth = 6) {
         this.game = game;
         this.scalers = scalers;
+        this.depth = depth;
     }
 
     /**
@@ -46,7 +49,7 @@ export default class Bot {
      * @returns {Cell[]} - The best move and its score.
      */
     minimax(
-        depth,
+        depth = this.depth,
         game = this.game,
         alpha = -Infinity,
         beta = Infinity,
@@ -64,7 +67,7 @@ export default class Bot {
         const sign = game.currentPlayer ? 1 : -1;
 
         const moves = game.validMoves().map((cell) => {
-            const newGame = game.clone();
+            const newGame = Game.cloneFrom(game);
             newGame.update(cell.row, cell.column);
             return { cell, value: this.evaluate(newGame) };
         });
@@ -74,7 +77,7 @@ export default class Bot {
         let best = [];
         for (let i = 0; i < moves.length; i++) {
             const cell = moves[i]['cell'];
-            const newGame = game.clone();
+            const newGame = Game.cloneFrom(game);
             newGame.update(cell.row, cell.column);
 
             const newScore = this.minimax(
@@ -112,5 +115,79 @@ export default class Bot {
 
         transpositionTable.set(game.hash(), { depth, best });
         return best;
+    }
+}
+
+/**
+ * @typedef {{type: 'init'|'minimax', data: {
+ * game: Game,
+ * scalers: number[],
+ * depth: number
+ * }}} WorkerMessage
+ */
+
+/**
+ * @typedef {{best:Cell[]}} WorkerResponse
+ */
+
+/**
+ * @type {null|Bot}
+ */
+let bot;
+self.addEventListener('message', (event) => {
+    /**
+     * @type {WorkerMessage}
+     */
+    const { type, data } = event.data;
+    switch (type) {
+        case 'init':
+            bot = new Bot(Game.cloneFrom(data.game), data.scalers, data.depth);
+            break;
+        case 'minimax':
+            const best = bot.minimax(bot.depth, Game.cloneFrom(data.game));
+            self.postMessage({ best });
+            break;
+    }
+});
+
+export class BotWorker extends Worker {
+    /**
+     * @param {string} name - The worker name.
+     * @param {Game} game - The game board.
+     * @param {number[]} scalers - The evaluation scalers.
+     * @param {number} depth - The depth of the search.
+     */
+    constructor(name, game, scalers, depth) {
+        super('Bot.js', { name, type: 'module' });
+        this.game = game;
+        this.scalers = scalers;
+        this.depth = depth;
+
+        const message = { type: 'init', data: { game, scalers, depth } };
+        this.postMessage(message);
+    }
+
+    /**
+     * Gets the best move.
+     * @returns {Promise<{best: Cell[]}>} - The best move.
+     */
+    getBest() {
+        return new Promise((resolve) => {
+            /**
+             * @type {WorkerMessage}
+             */
+            const message = {
+                type: 'minimax',
+                data: { depth: this.depth, game: this.game },
+            };
+            this.postMessage(message);
+            this.addEventListener('message', (event) => {
+                /**
+                 * @type {WorkerResponse}
+                 */
+                const data = event.data;
+                resolve(data.best);
+            });
+        });
     }
 }

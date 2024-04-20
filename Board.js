@@ -30,14 +30,15 @@ export default class Board {
     }
 
     /**
-     * Clones the board.
+     * @param {Board} board - Board "struct" (without the class methods)
+     * @returns {Board}
      */
-    clone() {
-        const board = new Board(this.rows, this.columns);
-        board.board = this.board.map((row) =>
+    static cloneFrom(board) {
+        const newBoard = new Board(board.rows, board.columns);
+        newBoard.board = board.board.map((row) =>
             row.map((cell) => ({ ...cell }))
         );
-        return board;
+        return newBoard;
     }
 
     /**
