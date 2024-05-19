@@ -25,7 +25,7 @@ export default class Bot {
         if (game.gameOver()) {
             return Infinity * (2 * !game.currentPlayer - 1);
         }
-        return game.board
+        return game
             .getCells((cell) => cell.value > 0)
             .reduce((acc, cell) => {
                 const sign = cell.owner ? 1 : -1;
@@ -33,8 +33,8 @@ export default class Bot {
                 const baseCellValue = this.scalers[0];
                 const dotValue = cell.value ** this.scalers[1];
 
-                const rowDist = Math.abs(cell.row - game.board.rows / 2);
-                const colDist = Math.abs(cell.column - game.board.columns / 2);
+                const rowDist = Math.abs(cell.row - game.rows / 2);
+                const colDist = Math.abs(cell.column - game.columns / 2);
                 const distToCenter = -this.scalers[2] * (rowDist + colDist);
                 return acc + (baseCellValue + dotValue + distToCenter) * sign;
             }, 0);
@@ -168,8 +168,8 @@ export class BotWorker extends Worker {
     }
 
     /**
-     * Gets the best move.
-     * @returns {Promise<{best: Cell[]}>} - The best move.
+     * Gets the best moves.
+     * @returns {Promise<{best: Cell[]}>} - The best moves.
      */
     getBest() {
         return new Promise((resolve) => {

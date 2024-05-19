@@ -4,19 +4,19 @@ import { BotWorker } from './Bot.js';
 import { sleep } from './utils.js';
 
 const settings = {
-    rows: 10,
-    columns: 10,
+    rows: 7,
+    columns: 7,
     p1: {
         type: 'bot',
         depth: 2,
-        scalers: [3, 1.6, 1],
-        minDelay: 500,
+        scalers: [3, 1.6, 1.3],
+        minDelay: 100,
     },
     p2: {
-        type: 'bot',
-        depth: 2,
+        type: 'human',
+        depth: 3,
         scalers: [3, 1.6, 1],
-        minDelay: 500,
+        minDelay: 100,
     },
 };
 
@@ -72,7 +72,10 @@ async function play() {
     }
 
     io.render();
-    if (game.gameOver()) return;
+    if (game.gameOver()) {
+        await sleep(1000)
+        location.reload()
+    }
 
     if (settings.p2.type === 'human') {
         await io.playTurn();
@@ -87,7 +90,10 @@ async function play() {
     }
 
     io.render();
-    if (game.gameOver()) return;
+    if (game.gameOver()) {
+        await sleep(1000)
+        location.reload()
+    }
 
     requestAnimationFrame(play);
 }

@@ -30,15 +30,15 @@ export class DOMIOHandler extends IOHandler {
         this.boardContainer = boardContainer;
         this.turnContainer = turnContainer;
 
-        this.boardContainer.style.setProperty('--rows', this.game.board.rows);
+        this.boardContainer.style.setProperty('--rows', this.game.rows);
         this.boardContainer.style.setProperty(
             '--cols',
-            this.game.board.columns
+            this.game.columns
         );
 
         this.boardContainer.innerHTML = '';
-        for (let i = 0; i < this.game.board.rows; i++) {
-            for (let j = 0; j < this.game.board.columns; j++) {
+        for (let i = 0; i < this.game.rows; i++) {
+            for (let j = 0; j < this.game.columns; j++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 this.boardContainer.appendChild(cell);
@@ -53,11 +53,11 @@ export class DOMIOHandler extends IOHandler {
                 if (cell.classList.contains('cell')) {
                     const row = Math.floor(
                         Array.from(cell.parentNode.children).indexOf(cell) /
-                            this.game.board.columns
+                            this.game.columns
                     );
                     const column =
                         Array.from(cell.parentNode.children).indexOf(cell) %
-                        this.game.board.columns;
+                        this.game.columns;
                     if (!this.game.update(row, column)) return;
                     this.boardContainer.onclick = null;
                     resolve();
@@ -71,23 +71,20 @@ export class DOMIOHandler extends IOHandler {
         this.turnContainer?.classList.add(
             this.game.currentPlayer ? 'p2' : 'p1'
         );
-        for (let i = 0; i < this.game.board.rows; i++) {
-            for (let j = 0; j < this.game.board.columns; j++) {
+        for (let i = 0; i < this.game.rows; i++) {
+            for (let j = 0; j < this.game.columns; j++) {
                 const cell =
                     this.boardContainer.children[
-                        i * this.game.board.columns + j
+                        i * this.game.columns + j
                     ];
                 cell.classList.remove('p1', 'p2');
-                if (this.game.board.board[i][j].owner !== null) {
+                if (this.game.board[i][j].owner !== null) {
                     cell.classList.add(
-                        this.game.board.board[i][j].owner ? 'p2' : 'p1'
+                        this.game.board[i][j].owner ? 'p2' : 'p1'
                     );
                 }
-                cell.dataset.dots = this.game.board.board[i][j].value;
+                cell.dataset.dots = this.game.board[i][j].value;
             }
-        }
-        if (this.game.gameOver()) {
-            alert(`Player ${this.game.currentPlayer ? 1 : 2} wins!`);
         }
     }
 }
