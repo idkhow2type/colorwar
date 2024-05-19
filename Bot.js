@@ -41,12 +41,16 @@ export default class Bot {
     }
 
     /**
+     * @typedef {{move:Cell,score:number}[]} MinimaxResult
+     */
+
+    /**
      * Minimax algorithm.
      * @param {number} depth - The depth of the search.
      * @param {Game} game - The game board.
      * @param {number} alpha - The alpha value.
      * @param {number} beta - The beta value.
-     * @returns {Cell[]} - The best move and its score.
+     * @returns {MinimaxResult} - The best move and its score.
      */
     minimax(
         depth = this.depth,
@@ -127,7 +131,7 @@ export default class Bot {
  */
 
 /**
- * @typedef {{best:Cell[]}} WorkerResponse
+ * @typedef {{best:MinimaxResult}} WorkerResponse
  */
 
 /**
@@ -169,7 +173,7 @@ export class BotWorker extends Worker {
 
     /**
      * Gets the best moves.
-     * @returns {Promise<{best: Cell[]}>} - The best moves.
+     * @returns {Promise<MinimaxResult>} - The best moves.
      */
     getBest() {
         return new Promise((resolve) => {

@@ -8,15 +8,13 @@ const settings = {
     columns: 7,
     p1: {
         type: 'bot',
-        depth: 2,
+        depth: 4,
         scalers: [3, 1.6, 1.3],
-        minDelay: 100,
     },
     p2: {
-        type: 'human',
-        depth: 3,
-        scalers: [3, 1.6, 1],
-        minDelay: 100,
+        type: 'bot',
+        depth: 4,
+        scalers: [3, 1.6, 1.3],
     },
 };
 
@@ -59,40 +57,34 @@ window.io = io;
 
 io.render();
 async function play() {
+    let move;
+
     if (settings.p1.type === 'human') {
-        await io.playTurn();
+        move = await io.getCell();
     } else {
-        const start = performance.now();
         const best = await bot1Worker.getBest();
-        const { move } = best[Math.floor(Math.random() * best.length)];
-        game.update(move.row, move.column);
-        const end = performance.now();
-        if (end - start < settings.p1.minDelay)
-            await sleep(settings.p1.minDelay - end + start);
+        move = best[Math.floor(Math.random() * best.length)].move;
     }
+    game.update(move.row, move.column);
 
     io.render();
     if (game.gameOver()) {
-        await sleep(1000)
-        location.reload()
+        await sleep(1000);
+        location.reload();
     }
 
     if (settings.p2.type === 'human') {
-        await io.playTurn();
+        move = await io.getCell();
     } else {
-        const start = performance.now();
         const best = await bot2Worker.getBest();
-        const { move } = best[Math.floor(Math.random() * best.length)];
-        game.update(move.row, move.column);
-        const end = performance.now();
-        if (end - start < settings.p2.minDelay)
-            await sleep(settings.p2.minDelay - end + start);
+        move = best[Math.floor(Math.random() * best.length)].move;
     }
+    game.update(move.row, move.column);
 
     io.render();
     if (game.gameOver()) {
-        await sleep(1000)
-        location.reload()
+        await sleep(1000);
+        location.reload();
     }
 
     requestAnimationFrame(play);

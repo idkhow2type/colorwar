@@ -53,28 +53,40 @@ export default class Game {
     }
 
     /**
-     * Updates the game state.
-     * @param {number} i - The row index of the cell.
-     * @param {number} j - The column index of the cell.
+     * @param {number} row - The row index of the cell.
+     * @param {number} column - The column index of the cell.
      * @returns {boolean} - True if the move was valid, false otherwise.
      */
-    update(i, j) {
-        const cell = this.board[i][j];
+    isValidMove(row, column){
+        const cell = this.board[row][column];
         if (this.turn < 2) {
             if (cell.value !== 0) return false;
-            cell.value = 3;
-            cell.owner = this.currentPlayer;
         } else {
             if (cell.value === 0) return false;
             if (cell.owner !== this.currentPlayer) return false;
-            cell.value++;
+        }
+        return true
+    }
 
+    /**
+     * Updates the game state.
+     * @param {number} row - The row index of the cell.
+     * @param {number} column - The column index of the cell.
+     */
+    update(row, column) {
+        if (!this.isValidMove(row,column)) return
+
+        const cell = this.board[row][column];
+        if (this.turn < 2) {
+            cell.value = 3;
+            cell.owner = this.currentPlayer;
+        } else {
+            cell.value++;
             this.spread(cell);
         }
 
         this.currentPlayer = !this.currentPlayer;
         this.turn++;
-        return true;
     }
 
     /**

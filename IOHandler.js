@@ -1,4 +1,7 @@
 import Game from './Game.js';
+/**
+ * @type {import('./Cell.js').Cell}
+ */
 
 export class IOHandler {
     /**
@@ -9,9 +12,10 @@ export class IOHandler {
     }
 
     /**
-     * Returns a promise that resolves when the player has made their turn.
+     * Returns a promise that resolves when the player has chosen a cell
+     * @returns {Promise<Cell>}
      */
-    async playTurn() {}
+    async getCell() {}
 
     /**
      * Renders the game board.
@@ -31,10 +35,7 @@ export class DOMIOHandler extends IOHandler {
         this.turnContainer = turnContainer;
 
         this.boardContainer.style.setProperty('--rows', this.game.rows);
-        this.boardContainer.style.setProperty(
-            '--cols',
-            this.game.columns
-        );
+        this.boardContainer.style.setProperty('--cols', this.game.columns);
 
         this.boardContainer.innerHTML = '';
         for (let i = 0; i < this.game.rows; i++) {
@@ -46,7 +47,7 @@ export class DOMIOHandler extends IOHandler {
         }
     }
 
-    async playTurn() {
+    async getCell() {
         return new Promise((resolve) => {
             this.boardContainer.onclick = (event) => {
                 const cell = event.target;
@@ -58,9 +59,9 @@ export class DOMIOHandler extends IOHandler {
                     const column =
                         Array.from(cell.parentNode.children).indexOf(cell) %
                         this.game.columns;
-                    if (!this.game.update(row, column)) return;
+                    if (!this.game.isValidMove(row, column)) return;
                     this.boardContainer.onclick = null;
-                    resolve();
+                    resolve(this.game.board[row][column]);
                 }
             };
         });
@@ -74,9 +75,7 @@ export class DOMIOHandler extends IOHandler {
         for (let i = 0; i < this.game.rows; i++) {
             for (let j = 0; j < this.game.columns; j++) {
                 const cell =
-                    this.boardContainer.children[
-                        i * this.game.columns + j
-                    ];
+                    this.boardContainer.children[i * this.game.columns + j];
                 cell.classList.remove('p1', 'p2');
                 if (this.game.board[i][j].owner !== null) {
                     cell.classList.add(
