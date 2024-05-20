@@ -57,7 +57,7 @@ export default class Game {
      * @param {number} column - The column index of the cell.
      * @returns {boolean} - True if the move was valid, false otherwise.
      */
-    isValidMove(row, column){
+    isValidMove(row, column) {
         const cell = this.board[row][column];
         if (this.turn < 2) {
             if (cell.value !== 0) return false;
@@ -65,24 +65,26 @@ export default class Game {
             if (cell.value === 0) return false;
             if (cell.owner !== this.currentPlayer) return false;
         }
-        return true
+        return true;
     }
 
     /**
      * Updates the game state.
      * @param {number} row - The row index of the cell.
      * @param {number} column - The column index of the cell.
+     * @param {()=>Promise} callback - Called for every modified cell
      */
-    update(row, column) {
-        if (!this.isValidMove(row,column)) return
+    async update(row, column, callback) {
+        if (!this.isValidMove(row, column)) return;
 
         const cell = this.board[row][column];
         if (this.turn < 2) {
             cell.value = 3;
             cell.owner = this.currentPlayer;
+            if (callback) await callback();
         } else {
             cell.value++;
-            this.spread(cell);
+            await this.spread(cell, callback);
         }
 
         this.currentPlayer = !this.currentPlayer;
@@ -92,9 +94,13 @@ export default class Game {
     /**
      * Spreads the dots to the adjacent cells.
      * @param {Cell} cell - The cell to spread the dots from.
+     * @param {()=>Promise} callback - Called for every modified cell
      */
-    spread(cell) {
-        if (cell.value < 4) return;
+    async spread(cell, callback) {
+        if (cell.value < 4) {
+            if (callback) await callback();
+            return
+        };
         const owner = cell.owner;
         const queue = [cell];
         while (queue.length > 0) {
@@ -117,6 +123,7 @@ export default class Game {
                     queue.push(neighbor);
                 }
             }
+            if (callback) await callback();
             if (
                 this.getCells((cell) => cell.value > 0).every(
                     (cell) => cell.owner === owner

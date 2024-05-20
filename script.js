@@ -65,13 +65,19 @@ async function play() {
         const best = await bot1Worker.getBest();
         move = best[Math.floor(Math.random() * best.length)].move;
     }
-    game.update(move.row, move.column);
 
-    io.render();
+    if (move) {
+        await game.update(move.row, move.column, async () => {
+            // await sleep(200);
+            io.render();
+        });
+    }
+
     if (game.gameOver()) {
         await sleep(1000);
         location.reload();
     }
+
 
     if (settings.p2.type === 'human') {
         move = await io.getCell();
@@ -79,9 +85,14 @@ async function play() {
         const best = await bot2Worker.getBest();
         move = best[Math.floor(Math.random() * best.length)].move;
     }
-    game.update(move.row, move.column);
 
-    io.render();
+    if (move) {
+        await game.update(move.row, move.column, async () => {
+            // await sleep(200);
+            io.render();
+        });
+    }
+
     if (game.gameOver()) {
         await sleep(1000);
         location.reload();
