@@ -12,7 +12,7 @@ const settings = {
         scalers: [3, 1.6, 1.3],
     },
     p2: {
-        type: 'bot',
+        type: 'human',
         depth: 4,
         scalers: [3, 1.6, 1.3],
     },
@@ -68,7 +68,7 @@ async function play() {
 
     if (move) {
         await game.update(move.row, move.column, async () => {
-            // await sleep(200);
+            await sleep(200);
             io.render();
         });
     }
@@ -88,7 +88,7 @@ async function play() {
 
     if (move) {
         await game.update(move.row, move.column, async () => {
-            // await sleep(200);
+            await sleep(200);
             io.render();
         });
     }

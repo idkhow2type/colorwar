@@ -50,9 +50,9 @@ export default class Bot {
      * @param {Game} game - The game board.
      * @param {number} alpha - The alpha value.
      * @param {number} beta - The beta value.
-     * @returns {MinimaxResult} - The best move and its score.
+     * @returns {Promise<MinimaxResult>} - The best moves and its score.
      */
-    minimax(
+    async minimax(
         depth = this.depth,
         game = this.game,
         alpha = -Infinity,
@@ -70,11 +70,13 @@ export default class Bot {
 
         const sign = game.currentPlayer ? 1 : -1;
 
-        const moves = game.validMoves().map((cell) => {
-            const newGame = Game.cloneFrom(game);
-            newGame.update(cell.row, cell.column);
-            return { cell, value: this.evaluate(newGame) };
-        });
+        const moves = await Promise.all(
+            game.validMoves().map(async (cell) => {
+                const newGame = Game.cloneFrom(game);
+                await newGame.update(cell.row, cell.column);
+                return { cell, value: this.evaluate(newGame) };
+            })
+        );
         moves.sort((a, b) => (b.value - a.value) * sign);
 
         let score = Infinity * -sign;
@@ -82,15 +84,15 @@ export default class Bot {
         for (let i = 0; i < moves.length; i++) {
             const cell = moves[i]['cell'];
             const newGame = Game.cloneFrom(game);
-            newGame.update(cell.row, cell.column);
+            await newGame.update(cell.row, cell.column);
 
-            const newScore = this.minimax(
+            let newScore = (await this.minimax(
                 depth - 1,
                 newGame,
                 alpha,
                 beta,
                 transpositionTable
-            )[0].score;
+            ))[0].score;
 
             if (game.currentPlayer) {
                 if (utils.nearCompare(newScore, score, '>')) {
@@ -138,7 +140,7 @@ export default class Bot {
  * @type {null|Bot}
  */
 let bot;
-self.addEventListener('message', (event) => {
+self.addEventListener('message', async (event) => {
     /**
      * @type {WorkerMessage}
      */
@@ -148,7 +150,10 @@ self.addEventListener('message', (event) => {
             bot = new Bot(Game.cloneFrom(data.game), data.scalers, data.depth);
             break;
         case 'minimax':
-            const best = bot.minimax(bot.depth, Game.cloneFrom(data.game));
+            const best = await bot.minimax(
+                bot.depth,
+                Game.cloneFrom(data.game)
+            );
             self.postMessage({ best });
             break;
     }
