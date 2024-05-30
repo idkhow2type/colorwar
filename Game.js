@@ -1,3 +1,7 @@
+/**
+ * @type {import('./Cell.js').Cell}
+ */
+
 export default class Game {
     /**
      * @param {{
@@ -32,8 +36,8 @@ export default class Game {
 
     /**
      * Gets the cells that match the given predicate.
-     * @param {function} predicate - The predicate function used to filter the cells.
-     * @returns {Array} - The filtered cells.
+     * @param {(cell: Cell)=>boolean} predicate - The predicate function used to filter the cells.
+     * @returns {Cell[]} - The filtered cells.
      */
     getCells(predicate) {
         predicate = predicate || (() => true);
@@ -72,7 +76,7 @@ export default class Game {
      * Updates the game state.
      * @param {number} row - The row index of the cell.
      * @param {number} column - The column index of the cell.
-     * @param {()=>Promise} callback - Called for every modified cell
+     * @param {(queue: {cell:Cell,depth:number}[])=>Promise} callback - Called for every modified cell
      */
     async update(row, column, callback) {
         if (!this.isValidMove(row, column)) return;
@@ -81,56 +85,39 @@ export default class Game {
         if (this.turn < 2) {
             cell.value = 3;
             cell.owner = this.currentPlayer;
-            if (callback) await callback();
-        } else {
-            cell.value++;
-            await this.spread(cell, callback);
+        } else if (++cell.value >= 4) {
+            const owner = cell.owner;
+            const queue = [{ cell, depth: 0 }];
+            while (queue.length > 0) {
+                const { cell: current, depth } = queue.shift();
+                current.value = 0;
+                current.owner = null;
+                // define the neighbors from cardinal directions
+                const neighbors = [
+                    this.board[current.row - 1]?.[current.column],
+                    this.board[current.row + 1]?.[current.column],
+                    this.board[current.row]?.[current.column - 1],
+                    this.board[current.row]?.[current.column + 1],
+                ].filter((cell) => cell !== undefined);
+                for (const neighbor of neighbors) {
+                    if (neighbor.value === 4) continue;
+                    neighbor.value++;
+                    neighbor.owner = owner;
+                    if (neighbor.value === 4)
+                        queue.push({ cell: neighbor, depth: depth + 1 });
+                }
+                await callback?.([ ...queue]);
+                if (
+                    this.getCells((cell) => cell.value > 0).every(
+                        (cell) => cell.owner === owner
+                    )
+                )
+                    break;
+            }
         }
 
         this.currentPlayer = !this.currentPlayer;
         this.turn++;
-    }
-
-    /**
-     * Spreads the dots to the adjacent cells.
-     * @param {Cell} cell - The cell to spread the dots from.
-     * @param {()=>Promise} callback - Called for every modified cell
-     */
-    async spread(cell, callback) {
-        if (cell.value < 4) {
-            if (callback) await callback();
-            return
-        };
-        const owner = cell.owner;
-        const queue = [cell];
-        while (queue.length > 0) {
-            const current = queue.shift();
-            current.value = 0;
-            current.owner = null;
-            // define the neighbors from cardinal directions
-            const neighbors = [
-                this.board[current.row - 1]?.[current.column],
-                this.board[current.row + 1]?.[current.column],
-                this.board[current.row]?.[current.column - 1],
-                this.board[current.row]?.[current.column + 1],
-            ].filter((cell) => cell !== undefined);
-            for (const neighbor of neighbors) {
-                neighbor.value++;
-                neighbor.owner = owner;
-                if (neighbor.value >= 4) {
-                    neighbor.value = 4;
-                    neighbor.owner = owner;
-                    queue.push(neighbor);
-                }
-            }
-            if (callback) await callback();
-            if (
-                this.getCells((cell) => cell.value > 0).every(
-                    (cell) => cell.owner === owner
-                )
-            )
-                return;
-        }
     }
 
     /**

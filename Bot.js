@@ -4,6 +4,10 @@ import * as utils from './utils.js';
  * @type {import('./Cell.js').Cell}
  */
 
+/**
+ * @typedef {{cell:Cell,score:number|null}} Move
+ */
+
 export default class Bot {
     /**
      * @param {Game} game - The game board.
@@ -41,16 +45,12 @@ export default class Bot {
     }
 
     /**
-     * @typedef {{move:Cell,score:number}[]} MinimaxResult
-     */
-
-    /**
      * Minimax algorithm.
      * @param {number} depth - The depth of the search.
      * @param {Game} game - The game board.
      * @param {number} alpha - The alpha value.
      * @param {number} beta - The beta value.
-     * @returns {Promise<MinimaxResult>} - The best moves and its score.
+     * @returns {Promise<Move[]>} - The best moves and its score.
      */
     async minimax(
         depth = this.depth,
@@ -60,7 +60,7 @@ export default class Bot {
         transpositionTable = new Map()
     ) {
         if (depth === 0 || game.gameOver()) {
-            return [{ score: this.evaluate(game), move: null }];
+            return [{ score: this.evaluate(game), cell: null }];
         }
 
         const cached = transpositionTable.get(game.hash());
@@ -70,6 +70,9 @@ export default class Bot {
 
         const sign = game.currentPlayer ? 1 : -1;
 
+        /**
+         * @type {Move[]}
+         */
         const moves = await Promise.all(
             game.validMoves().map(async (cell) => {
                 const newGame = Game.cloneFrom(game);
@@ -86,20 +89,22 @@ export default class Bot {
             const newGame = Game.cloneFrom(game);
             await newGame.update(cell.row, cell.column);
 
-            let newScore = (await this.minimax(
-                depth - 1,
-                newGame,
-                alpha,
-                beta,
-                transpositionTable
-            ))[0].score;
+            let newScore = (
+                await this.minimax(
+                    depth - 1,
+                    newGame,
+                    alpha,
+                    beta,
+                    transpositionTable
+                )
+            )[0].score;
 
             if (game.currentPlayer) {
                 if (utils.nearCompare(newScore, score, '>')) {
                     score = newScore;
-                    best = [{ score, move: cell }];
+                    best = [{ score, cell }];
                 } else if (utils.nearCompare(newScore, score, '==')) {
-                    best.push({ score, move: cell });
+                    best.push({ score, cell });
                 }
                 alpha = Math.max(alpha, score);
                 if (beta <= alpha) {
@@ -108,9 +113,9 @@ export default class Bot {
             } else {
                 if (utils.nearCompare(newScore, score, '<')) {
                     score = newScore;
-                    best = [{ score, move: cell }];
+                    best = [{ score, cell }];
                 } else if (utils.nearCompare(newScore, score, '==')) {
-                    best.push({ score, move: cell });
+                    best.push({ score, cell });
                 }
                 beta = Math.min(beta, score);
                 if (beta <= alpha) {
@@ -133,7 +138,7 @@ export default class Bot {
  */
 
 /**
- * @typedef {{best:MinimaxResult}} WorkerResponse
+ * @typedef {{best:Move[]}} WorkerResponse
  */
 
 /**
@@ -178,7 +183,7 @@ export class BotWorker extends Worker {
 
     /**
      * Gets the best moves.
-     * @returns {Promise<MinimaxResult>} - The best moves.
+     * @returns {Promise<Move[]>} - The best moves.
      */
     getBest() {
         return new Promise((resolve) => {
