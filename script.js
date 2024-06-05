@@ -4,8 +4,8 @@ import { BotWorker } from './Bot.js';
 import { sleep } from './utils.js';
 
 const settings = {
-    rows: 5,
-    columns: 5,
+    rows: 7,
+    columns: 7,
     p1: {
         type: 'bot',
         depth: 5,
@@ -17,19 +17,10 @@ const settings = {
         scalers: [3, 1.6, 1.3],
     },
     delay: {
-        move: 0,
-        animation: 0,
+        move: 200,
+        animation: 200,
     },
 };
-
-// document.querySelectorAll('.game-settings input').forEach((input) => {
-//     input.addEventListener('change', (event) => {
-//         const { name, value } = event.target;
-//         console.log(name, value);
-//     });
-// });
-
-// console.log(settings);
 
 let game = new Game({
     rows: settings.rows,
@@ -46,11 +37,6 @@ window.game = game;
 window.io = io;
 window.bot1 = bot1Worker;
 window.bot2 = bot2Worker;
-
-// io.render();
-// console.time('bot1');
-// console.log(await bot1Worker.getBest());
-// console.timeEnd('bot1');
 
 io.render();
 async function play() {
