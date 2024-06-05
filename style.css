@@ -84,9 +84,9 @@ body {
 }
 
 .spread-dot {
-    --fade-speed: 0.1s;
-    --shrink-speed: 0.2s;
-    --move-speed: 0.1s;
+    --fade-speed: 0.01s;
+    --shrink-speed: 0.02s;
+    --move-speed: 0.01s;
     width: 100%;
     height: 100%;
     border-radius: 5px;
