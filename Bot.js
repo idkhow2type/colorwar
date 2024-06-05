@@ -50,6 +50,7 @@ export default class Bot {
      * @param {Game} game - The game board.
      * @param {number} alpha - The alpha value.
      * @param {number} beta - The beta value.
+     * @param {Map<string,{depth:number,best:Move[]}>} transpositionTable - The transposition table.
      * @returns {Promise<Move[]>} - The best moves and its score.
      */
     async minimax(
@@ -77,10 +78,13 @@ export default class Bot {
             game.validMoves().map(async (cell) => {
                 const newGame = Game.cloneFrom(game);
                 await newGame.update(cell.row, cell.column);
-                return { cell, value: this.evaluate(newGame) };
+                return {
+                    cell,
+                    score: this.evaluate(newGame),
+                };
             })
         );
-        moves.sort((a, b) => (b.value - a.value) * sign);
+        moves.sort((a, b) => (b.score - a.score) * sign);
 
         let score = Infinity * -sign;
         let best = [];
@@ -89,15 +93,7 @@ export default class Bot {
             const newGame = Game.cloneFrom(game);
             await newGame.update(cell.row, cell.column);
 
-            let newScore = (
-                await this.minimax(
-                    depth - 1,
-                    newGame,
-                    alpha,
-                    beta,
-                    transpositionTable
-                )
-            )[0].score;
+            let newScore = (await this.minimax(depth - 1, newGame, alpha, beta, transpositionTable))[0].score;
 
             if (game.currentPlayer) {
                 if (utils.nearCompare(newScore, score, '>')) {
@@ -155,10 +151,7 @@ self.addEventListener('message', async (event) => {
             bot = new Bot(Game.cloneFrom(data.game), data.scalers, data.depth);
             break;
         case 'minimax':
-            const best = await bot.minimax(
-                bot.depth,
-                Game.cloneFrom(data.game)
-            );
+            const best = await bot.minimax(bot.depth, Game.cloneFrom(data.game));
             self.postMessage({ best });
             break;
     }

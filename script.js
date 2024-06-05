@@ -4,17 +4,21 @@ import { BotWorker } from './Bot.js';
 import { sleep } from './utils.js';
 
 const settings = {
-    rows: 7,
-    columns: 7,
+    rows: 5,
+    columns: 5,
     p1: {
         type: 'bot',
-        depth: 6,
+        depth: 5,
         scalers: [3, 1.6, 1.3],
     },
     p2: {
-        type: 'bot',
-        depth: 6,
+        type: 'human',
+        depth: 5,
         scalers: [3, 1.6, 1.3],
+    },
+    delay: {
+        move: 0,
+        animation: 0,
     },
 };
 
@@ -27,38 +31,32 @@ const settings = {
 
 // console.log(settings);
 
-const game = new Game({
+let game = new Game({
     rows: settings.rows,
     columns: settings.columns,
     player: false,
 });
 
-const io = new DOMIOHandler(
-    game,
-    document.querySelector('.grid'),
-    document.body
-);
+const io = new DOMIOHandler(game, document.querySelector('.grid'), document.body);
 
-const bot1Worker = new BotWorker(
-    'bot1',
-    game,
-    settings.p1.scalers,
-    settings.p1.depth
-);
-const bot2Worker = new BotWorker(
-    'bot2',
-    game,
-    settings.p2.scalers,
-    settings.p2.depth
-);
+const bot1Worker = new BotWorker('bot1', game, settings.p1.scalers, settings.p1.depth);
+const bot2Worker = new BotWorker('bot2', game, settings.p2.scalers, settings.p2.depth);
 
 window.game = game;
 window.io = io;
 window.bot1 = bot1Worker;
 window.bot2 = bot2Worker;
 
+// io.render();
+// console.time('bot1');
+// console.log(await bot1Worker.getBest());
+// console.timeEnd('bot1');
+
 io.render();
 async function play() {
+    /**
+     * @type {Cell}
+     */
     let move;
 
     if (game.currentPlayer) {
@@ -83,25 +81,32 @@ async function play() {
             move.column,
             (() => {
                 let depth = 0;
+                let spreaded = [];
                 return async (queue) => {
-                    console.log(game.currentPlayer, [...queue], depth);
-                    if (queue.length > 0 && depth === queue[0].depth) return;
-                    console.log('rendering');
-                    io.render();
-                    if (queue.length > 0) await sleep(200);
+                    spreaded.push(queue[0].cell);
+                    if (queue.length > 1 && depth === queue[1].depth) return;
+                    await io.render(spreaded);
+                    if (queue.length > 1) await sleep(settings.delay.animation);
                     depth++;
+                    spreaded = [];
                 };
             })()
         );
     }
     io.render();
-    
+
     if (game.gameOver()) {
         await sleep(1000);
-        location.reload();
+        game = new Game({
+            rows: settings.rows,
+            columns: settings.columns,
+            player: false,
+        });
+        io.game = game;
+        io.render();
     }
 
-    await sleep(200);
+    await sleep(settings.delay.move);
 
     requestAnimationFrame(play);
 }

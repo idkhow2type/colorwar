@@ -39,3 +39,21 @@ export function nearCompare(a, b, operator, epsilon = 1e-6) {
 export function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/**
+ * Toggle a CSS class and resolve when the transition ends.
+ * @param {HTMLElement} element - The element to animate.
+ * @param {string} cssClass - The animation to play.
+ * @param {string} propertyName - The property name to check for.
+ * @returns {Promise<void>} - Resolves when the animation ends.
+ */
+export function toggleTransitionedClass(element, cssClass, propertyName) {
+    return new Promise((resolve) => {
+        element.ontransitionend = (e) => {
+            if (propertyName && e.propertyName !== propertyName) return;
+            element.ontransitionend = null;
+            resolve();
+        };
+        element.classList.toggle(cssClass);
+    });
+}

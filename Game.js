@@ -49,11 +49,7 @@ export default class Game {
      * @returns {Cell[]} - The valid moves.
      */
     validMoves() {
-        return this.getCells((cell) =>
-            this.turn < 2
-                ? cell.owner === null
-                : cell.owner === this.currentPlayer
-        );
+        return this.getCells((cell) => (this.turn < 2 ? cell.owner === null : cell.owner === this.currentPlayer));
     }
 
     /**
@@ -103,16 +99,10 @@ export default class Game {
                     if (neighbor.value === 4) continue;
                     neighbor.value++;
                     neighbor.owner = owner;
-                    if (neighbor.value === 4)
-                        queue.push({ cell: neighbor, depth: depth + 1 });
+                    if (neighbor.value === 4) queue.push({ cell: neighbor, depth: depth + 1 });
                 }
-                await callback?.([ ...queue]);
-                if (
-                    this.getCells((cell) => cell.value > 0).every(
-                        (cell) => cell.owner === owner
-                    )
-                )
-                    break;
+                await callback?.([{ cell: current, depth: depth }, ...queue]);
+                if (this.getCells((cell) => cell.value > 0).every((cell) => cell.owner === owner)) break;
             }
         }
 
@@ -126,10 +116,7 @@ export default class Game {
      */
     gameOver() {
         return (
-            this.turn > 1 &&
-            this.getCells((cell) => cell.value > 0).every(
-                (cell) => cell.owner === !this.currentPlayer
-            )
+            this.turn > 1 && this.getCells((cell) => cell.value > 0).every((cell) => cell.owner === !this.currentPlayer)
         );
     }
 

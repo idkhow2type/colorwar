@@ -20,8 +20,8 @@ body {
 }
 
 .grid {
-    --cols: 0;
-    --rows: 0;
+    --cols: 3;
+    --rows: 3;
     --max-grid-width: 75dvw;
     --max-grid-height: 75dvh;
     --gap: min(0.4em, 1vmin);
@@ -50,71 +50,77 @@ body {
     border-radius: 5px;
     width: 100%;
     height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
 }
 
-.p1 {
+[data-player='1'] {
     background-color: var(--p1);
 }
 
-.p2 {
+[data-player='2'] {
     background-color: var(--p2);
 }
 
 .cell[data-dots='1'] {
-    background-image: radial-gradient(
-        circle var(--dot-radius) at 50% 50%,
-        var(--dot) 100%,
-        transparent 100%
-    );
+    background-image: radial-gradient(circle var(--dot-radius) at 50% 50%, var(--dot) 100%, transparent 100%);
 }
 .cell[data-dots='2'] {
-    background-image: radial-gradient(
-            circle var(--dot-radius) at 30% 50%,
-            var(--dot) 100%,
-            transparent 100%
-        ),
-        radial-gradient(
-            circle var(--dot-radius) at 70% 50%,
-            var(--dot) 100%,
-            transparent 100%
-        );
+    background-image: radial-gradient(circle var(--dot-radius) at 30% 50%, var(--dot) 100%, transparent 100%),
+        radial-gradient(circle var(--dot-radius) at 70% 50%, var(--dot) 100%, transparent 100%);
 }
 .cell[data-dots='3'] {
-    background-image: radial-gradient(
-            circle var(--dot-radius) at 50% 30%,
-            var(--dot) 100%,
-            transparent 100%
-        ),
-        radial-gradient(
-            circle var(--dot-radius) at 30% 70%,
-            var(--dot) 100%,
-            transparent 100%
-        ),
-        radial-gradient(
-            circle var(--dot-radius) at 70% 70%,
-            var(--dot) 100%,
-            transparent 100%
-        );
+    background-image: radial-gradient(circle var(--dot-radius) at 50% 30%, var(--dot) 100%, transparent 100%),
+        radial-gradient(circle var(--dot-radius) at 30% 70%, var(--dot) 100%, transparent 100%),
+        radial-gradient(circle var(--dot-radius) at 70% 70%, var(--dot) 100%, transparent 100%);
 }
 .cell[data-dots='4'] {
-    background-image: radial-gradient(
-            circle var(--dot-radius) at 30% 30%,
-            var(--dot) 100%,
-            transparent 100%
-        ),
-        radial-gradient(
-            circle var(--dot-radius) at 70% 30%,
-            var(--dot) 100%,
-            transparent 100%
-        ),
-        radial-gradient(
-            circle var(--dot-radius) at 30% 70%,
-            var(--dot) 100%,
-            transparent 100%
-        ),
-        radial-gradient(
-            circle var(--dot-radius) at 70% 70%,
-            var(--dot) 100%,
-            transparent 100%
-        );
+    background-image: radial-gradient(circle var(--dot-radius) at 30% 30%, var(--dot) 100%, transparent 100%),
+        radial-gradient(circle var(--dot-radius) at 70% 30%, var(--dot) 100%, transparent 100%),
+        radial-gradient(circle var(--dot-radius) at 30% 70%, var(--dot) 100%, transparent 100%),
+        radial-gradient(circle var(--dot-radius) at 70% 70%, var(--dot) 100%, transparent 100%);
+}
+
+.spread-dot {
+    --fade-speed: 0.01s;
+    --shrink-speed: 0.02s;
+    --move-speed: 0.01s;
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    opacity: 0;
+    background-image: radial-gradient(circle var(--dot-radius) at 50% 50%, var(--dot) 100%, transparent 100%);
+    position: absolute;
+    z-index: 1;
+    transition: opacity var(--fade-speed) ease-out, width var(--shrink-speed) ease-out,
+        height var(--shrink-speed) ease-out, border-radius var(--shrink-speed) ease-out,
+        translate var(--move-speed) ease-out;
+}
+
+.appear {
+    opacity: 1;
+}
+
+.shrink {
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+}
+
+.right {
+    translate: calc(var(--cell-size) + var(--gap));
+}
+
+.left {
+    translate: calc(-1 * var(--cell-size) - var(--gap));
+}
+
+.up {
+    translate: 0 calc(-1 * var(--cell-size) - var(--gap));
+}
+
+.down {
+    translate: 0 calc(var(--cell-size) + var(--gap));
 }
