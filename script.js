@@ -4,8 +4,8 @@ import { BotWorker } from './Bot.js';
 import { sleep } from './utils.js';
 
 const settings = {
-    rows: 5,
-    columns: 5,
+    rows: 7,
+    columns: 7,
     p1: {
         type: 'bot',
         depth: 5,
@@ -17,43 +17,34 @@ const settings = {
         scalers: [3, 1.6, 1.3],
     },
     delay: {
-        move: 0,
-        animation: 0,
+        move: 200,
+        animation: 200,
     },
 };
 
-// document.querySelectorAll('.game-settings input').forEach((input) => {
-//     input.addEventListener('change', (event) => {
-//         const { name, value } = event.target;
-//         console.log(name, value);
-//     });
-// });
+let game, io, bot1Worker, bot2Worker;
+function init() {
+    game = new Game({
+        rows: settings.rows,
+        columns: settings.columns,
+        player: false,
+    });
 
-// console.log(settings);
+    io = new DOMIOHandler(game, document.querySelector('.grid'), document.body);
 
-let game = new Game({
-    rows: settings.rows,
-    columns: settings.columns,
-    player: false,
-});
+    bot1Worker = new BotWorker('bot1', game, settings.p1.scalers, settings.p1.depth);
+    bot2Worker = new BotWorker('bot2', game, settings.p2.scalers, settings.p2.depth);
 
-const io = new DOMIOHandler(game, document.querySelector('.grid'), document.body);
+    window.game = game;
+    window.io = io;
+    window.bot1 = bot1Worker;
+    window.bot2 = bot2Worker;
 
-const bot1Worker = new BotWorker('bot1', game, settings.p1.scalers, settings.p1.depth);
-const bot2Worker = new BotWorker('bot2', game, settings.p2.scalers, settings.p2.depth);
+    io.render();
+}
 
-window.game = game;
-window.io = io;
-window.bot1 = bot1Worker;
-window.bot2 = bot2Worker;
-
-// io.render();
-// console.time('bot1');
-// console.log(await bot1Worker.getBest());
-// console.timeEnd('bot1');
-
-io.render();
-async function play() {
+init();
+while (true) {
     /**
      * @type {Cell}
      */
@@ -97,18 +88,8 @@ async function play() {
 
     if (game.gameOver()) {
         await sleep(1000);
-        game = new Game({
-            rows: settings.rows,
-            columns: settings.columns,
-            player: false,
-        });
-        io.game = game;
-        io.render();
+        init();
     }
 
     await sleep(settings.delay.move);
-
-    requestAnimationFrame(play);
 }
-
-play();
