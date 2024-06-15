@@ -14,7 +14,7 @@ export default class Bot {
      * @param {number[]} scalers - The evaluation scalers.
      * @param {number} depth - The depth of the search.
      */
-    constructor(game, scalers = [3, 1.6, 1], depth = 6) {
+    constructor(game, scalers = [3, 1.6, 1.3], depth = 6) {
         this.game = game;
         this.scalers = scalers;
         this.depth = depth;
@@ -37,8 +37,8 @@ export default class Bot {
                 const baseCellValue = this.scalers[0];
                 const dotValue = cell.value ** this.scalers[1];
 
-                const rowDist = Math.abs(cell.row - game.rows / 2);
-                const colDist = Math.abs(cell.column - game.columns / 2);
+                const rowDist = Math.abs(cell.row - game.rows/2 + 0.5);
+                const colDist = Math.abs(cell.column - game.columns/2 + 0.5);
                 const distToCenter = -this.scalers[2] * (rowDist + colDist);
                 return acc + (baseCellValue + dotValue + distToCenter) * sign;
             }, 0);
