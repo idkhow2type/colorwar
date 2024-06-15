@@ -22,7 +22,23 @@ const settings = {
     },
 };
 
-let game, io, bot1Worker, bot2Worker;
+/**
+ * @type {Game}
+ */
+let game;
+/**
+ * @type {DOMIOHandler}
+ */
+let io;
+/**
+ * @type {BotWorker}
+ */
+let bot1Worker;
+/**
+ * @type {BotWorker}
+ */
+let bot2Worker;
+
 function init() {
     game = new Game({
         rows: settings.rows,
@@ -44,29 +60,37 @@ function init() {
 }
 
 init();
-while (true) {
-    /**
-     * @type {Cell}
-     */
-    let move;
 
-    if (game.currentPlayer) {
-        if (settings.p2.type === 'human') {
-            move = await io.getCell();
-        } else {
-            const best = await bot1Worker.getBest();
-            move = best[Math.floor(Math.random() * best.length)].cell;
-        }
-    } else {
-        if (settings.p1.type === 'human') {
-            move = await io.getCell();
-        } else {
-            const best = await bot2Worker.getBest();
-            move = best[Math.floor(Math.random() * best.length)].cell;
-        }
+let interrupt;
+document.onkeyup = (event) => {
+    if (event.key === 'Enter') {
+        interrupt();
+        init();
     }
+};
+while (true) {
+    await new Promise(async (resolve) => {
+        interrupt = resolve;
 
-    if (move) {
+        // yes this is worse than before
+        // but it's funny
+        /**
+         * @type {Cell}
+         */
+        const move = game.currentPlayer
+            ? settings.p2.type === 'human'
+                ? await io.getCell()
+                : await (async () => {
+                      let best = await bot1Worker.getBest();
+                      return best[Math.floor(Math.random() * best.length)].cell;
+                  })()
+            : settings.p1.type === 'human'
+            ? await io.getCell()
+            : await (async () => {
+                  let best = await bot1Worker.getBest();
+                  return best[Math.floor(Math.random() * best.length)].cell;
+              })();
+
         await game.update(
             move.row,
             move.column,
@@ -83,13 +107,15 @@ while (true) {
                 };
             })()
         );
-    }
-    io.render();
+        io.render();
+
+        resolve();
+    });
 
     if (game.gameOver()) {
         await sleep(1000);
         init();
+    } else {
+        await sleep(settings.delay.move);
     }
-
-    await sleep(settings.delay.move);
 }
